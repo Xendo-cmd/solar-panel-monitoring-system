@@ -66,10 +66,10 @@
             <td>{{ m.milestone_type }}</td>
             <td>
                 {% if m.file_path %}
-                {% if m.file_path and m.file_path.startswith(('http://', 'https://')) %}
+                {% if m.file_path.startswith(('http://', 'https://')) %}
                     <a href="{{ m.file_path }}" target="_blank" rel="noopener">View file</a>
                 {% else %}
-                    <a href="{{ url_for('uploaded_file', filename=m.file_path) }}" target="_blank">View file</a>
+                    <a href="{{ url_for('uploaded_file', filename=m.file_path) }}" target="_blank" rel="noopener">View file</a>
                 {% endif %}
                 {% else %}
                 —
