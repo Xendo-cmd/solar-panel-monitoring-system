@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% import "_progress.html" as p %}
+{% block title %}{{ project.site_name }}{% endblock %}
+{% block content %}
+<div class="header-row">
+    <h1>{{ project.site_name }}</h1>
+</div>
+<p class="muted">{{ project.address or 'No address given' }}</p>
+
+{{ p.progress_bar(progress_percent, big=True) }}
+<p class="muted">{{ progress_approved }} of {{ progress_total }} milestones approved</p>
+
+{% if is_inspector %}
+<div class="card danger-zone">
+    <h2>Site Actions</h2>
+    <p class="muted">Download a summary report before deleting — deleting a site also removes it from the installer's account.</p>
+    <div class="action-row">
+        <a class="btn btn-outline" href="{{ url_for('download_report', project_id=project.id) }}">Download Summary Report (PDF)</a>
+        <form method="POST" action="{{ url_for('delete_project', project_id=project.id) }}">
+            <button type="button" class="btn btn-danger"
+                    data-confirm="Delete this site? This cannot be undone and will remove it from the installer's account too.">Delete Site</button>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+{% if not is_inspector %}
+<div class="card">
+    <h2>Upload a Milestone</h2>
+    <form method="POST" enctype="multipart/form-data">
+        <label>Milestone Type</label>
+        <select name="milestone_type" required>
+            {% for t in milestone_types %}
+            <option value="{{ t }}">{{ t }}</option>
+            {% endfor %}
+        </select>
+
+        <label>File (blueprint, photo, or wiring diagram)</label>
+        <div class="dropzone" data-dropzone>
+            <span>Drag &amp; drop a file here, or click to choose one</span>
+            <input type="file" name="file">
+        </div>
+
+        <button type="submit">Upload</button>
+    </form>
+</div>
+{% endif %}
+
+<h2>Milestones</h2>
+{% if not milestones %}
+<p class="muted">No milestones uploaded yet.</p>
+{% else %}
+<table class="table">
+    <thead>
+        <tr>
+            <th>Type</th>
+            <th>File</th>
+            <th>Status</th>
+            <th>Uploaded</th>
+            {% if is_inspector %}<th>Review</th>{% endif %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for m in milestones %}
+        <tr>
+            <td>{{ m.milestone_type }}</td>
+            <td>
+                {% if m.file_path %}
+                {% if m.file_path and m.file_path.startswith(('http://', 'https://')) %}
+                    <a href="{{ m.file_path }}" target="_blank" rel="noopener">View file</a>
+                {% else %}
+                    <a href="{{ url_for('uploaded_file', filename=m.file_path) }}" target="_blank">View file</a>
+                {% endif %}
+                {% else %}
+                —
+                {% endif %}
+            </td>
+            <td><span class="status status-{{ m.status }}">{% if m.status == 'approved' %}✅{% elif m.status == 'rejected' %}❌{% else %}⏳{% endif %} {{ m.status }}</span>
+                {% if m.status == 'rejected' and m.note %}<br><small>{{ m.note }}</small>{% endif %}
+            </td>
+            <td>{{ m.uploaded_at.strftime('%Y-%m-%d %H:%M') }}</td>
+            {% if is_inspector %}
+            <td>
+                {% if m.status == 'pending' %}
+                <form method="POST" action="{{ url_for('review_milestone', milestone_id=m.id) }}" class="inline-form">
+                    <input type="hidden" name="decision" value="approved">
+                    <button type="submit" class="btn-small btn-approve">Approve</button>
+                </form>
+                <form method="POST" action="{{ url_for('review_milestone', milestone_id=m.id) }}" class="inline-form">
+                    <input type="hidden" name="decision" value="rejected">
+                    <input type="text" name="note" placeholder="Reason (optional)" class="note-input">
+                    <button type="submit" class="btn-small btn-reject">Reject</button>
+                </form>
+                {% else %}
+                <span class="muted">Reviewed</span>
+                {% endif %}
+            </td>
+            {% endif %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+<p class="muted">
+    {% if is_inspector %}
+    <a href="{{ url_for('inspector_dashboard') }}">Back to dashboard</a>
+    {% else %}
+    <a href="{{ url_for('installer_dashboard') }}">Back to dashboard</a>
+    {% endif %}
+</p>
+{% endblock %}
