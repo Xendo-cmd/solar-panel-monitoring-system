@@ -29,13 +29,22 @@ UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "pdf", "dwg", "docx"}
 
 # Cloudinary is used in production so uploaded blueprints/photos/diagrams
-# survive Render restarts. If CLOUDINARY_URL is not configured, the app
-# automatically falls back to the local uploads/ folder for development.
-USE_CLOUDINARY = bool(os.environ.get("CLOUDINARY_URL"))
+# survive Render restarts. Render provides the credentials as separate
+# environment variables. For local development, if those variables are
+# absent, the app falls back to the local uploads/ folder.
+CLOUDINARY_CLOUD_NAME = os.environ.get("CLOUDINARY_CLOUD_NAME")
+CLOUDINARY_API_KEY = os.environ.get("CLOUDINARY_API_KEY")
+CLOUDINARY_API_SECRET = os.environ.get("CLOUDINARY_API_SECRET")
+USE_CLOUDINARY = all((CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET))
 if USE_CLOUDINARY and not CLOUDINARY_AVAILABLE:
-    raise RuntimeError("CLOUDINARY_URL is set, but the cloudinary package is not installed.")
+    raise RuntimeError("Cloudinary credentials are set, but the cloudinary package is not installed.")
 if USE_CLOUDINARY:
-    cloudinary.config(secure=True)
+    cloudinary.config(
+        cloud_name=CLOUDINARY_CLOUD_NAME,
+        api_key=CLOUDINARY_API_KEY,
+        api_secret=CLOUDINARY_API_SECRET,
+        secure=True,
+    )
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "change-this-secret-key")
