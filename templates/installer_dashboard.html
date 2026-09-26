@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% import "_progress.html" as p %}
+{% block title %}Installer Dashboard{% endblock %}
+{% block content %}
+<div class="header-row">
+    <h1>My Sites</h1>
+    <a class="btn" href="{{ url_for('new_project') }}">+ New Site</a>
+</div>
+
+{% if not projects %}
+<p class="muted">You haven't added any sites yet. Click "New Site" to start uploading blueprints, photos, and wiring info.</p>
+{% else %}
+<table class="table">
+    <thead>
+        <tr>
+            <th>Site Name</th>
+            <th>Address</th>
+            <th>Progress</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for proj in projects %}
+        <tr>
+            <td>{{ proj.site_name }}</td>
+            <td>{{ proj.address or '—' }}</td>
+            <td>{{ p.progress_bar(project_progress_map[proj.id][0]) }}</td>
+            <td><a href="{{ url_for('project_detail', project_id=proj.id) }}">Open</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+{% endblock %}
