@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Profile{% endblock %}
+{% block content %}
+<div class="card narrow">
+    <h1>Profile &amp; Settings</h1>
+    <p class="muted">Email: {{ current_user.email }} · Role: {{ current_user.role }}</p>
+    {% if current_user.role == 'inspector' %}
+    <p class="muted">Business Key: <span class="key">{{ current_user.business_key }}</span></p>
+    {% endif %}
+
+    <form method="POST">
+        <label>Name</label>
+        <input type="text" name="name" value="{{ current_user.name }}">
+
+        <h2>Change Password</h2>
+        <label>Current Password</label>
+        <input type="password" name="current_password" placeholder="Leave blank to keep your name-only change">
+
+        <label>New Password</label>
+        <input type="password" name="new_password">
+
+        <label>Confirm New Password</label>
+        <input type="password" name="confirm_password">
+
+        <button type="submit">Save Changes</button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,9 @@
+{% macro progress_bar(percent, big=False) %}
+{% set css_class = 'low' if percent < 40 else ('mid' if percent < 100 else '') %}
+<div class="progress-wrap {{ 'progress-big' if big }}">
+    <div class="progress-bar">
+        <div class="progress-fill {{ css_class }}" style="width: {{ percent }}%;"></div>
+    </div>
+    <span class="progress-label">{{ percent }}%</span>
+</div>
+{% endmacro %}

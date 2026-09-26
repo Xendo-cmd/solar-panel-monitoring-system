@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}{{ m.milestone_type }}{% endblock %}
+{% block content %}
+<h1>{{ m.milestone_type }}</h1>
+<p class="muted">{{ project.site_name }} · <span class="status status-{{ m.status }}">{% if m.status == 'approved' %}✅{% elif m.status == 'rejected' %}❌{% else %}⏳{% endif %} {{ m.status }}</span></p>
+<p class="muted">Uploaded {{ m.uploaded_at.strftime('%Y-%m-%d %H:%M') }}{% if m.reviewed_at %} · Reviewed {{ m.reviewed_at.strftime('%Y-%m-%d %H:%M') }}{% endif %}</p>
+
+<div class="card">
+    <h2>Files</h2>
+    {% if not m.files %}
+    <p class="muted">No files were attached to this submission.</p>
+    {% else %}
+    <div class="file-thumb-row">
+        {% for f in m.files %}
+            {% set ext = f.file_path.rsplit('.',1)[-1].lower() if '.' in f.file_path else '' %}
+            {% if ext in ['png','jpg','jpeg'] %}
+            <a href="{{ url_for('uploaded_file', filename=f.file_path) }}" target="_blank">
+                <img src="{{ url_for('uploaded_file', filename=f.file_path) }}" alt="{{ f.original_name }}">
+            </a>
+            {% else %}
+            <a class="file-pill" href="{{ url_for('uploaded_file', filename=f.file_path) }}" target="_blank">{{ f.original_name or 'File' }}</a>
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+{% if is_inspector and m.status == 'pending' %}
+<div class="card">
+    <h2>Review This Milestone</h2>
+    <form method="POST" action="{{ url_for('review_milestone', milestone_id=m.id) }}">
+        <input type="hidden" name="decision" value="approved">
+        <button type="submit" class="btn-approve">Approve</button>
+    </form>
+    <form method="POST" action="{{ url_for('review_milestone', milestone_id=m.id) }}" style="margin-top:8px">
+        <input type="hidden" name="decision" value="rejected">
+        <label>Reason (optional, shared with the installer)</label>
+        <input type="text" name="note">
+        <button type="submit" class="btn-reject">Reject</button>
+    </form>
+</div>
+{% endif %}
+
+<div class="card">
+    <h2>Discussion</h2>
+    {% if not m.comments %}
+    <p class="muted">No comments yet.</p>
+    {% else %}
+    {% for c in m.comments %}
+    <div class="comment">
+        <div class="comment-meta">{{ c.author_name }} ({{ c.author_role }}) · {{ c.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+        <div class="comment-body">{{ c.body }}</div>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('add_comment', milestone_id=m.id) }}" style="margin-top:12px">
+        <label>Add a comment</label>
+        <input type="text" name="body" placeholder="Write a message…" required>
+        <button type="submit">Post Comment</button>
+    </form>
+</div>
+
+<p class="muted">
+    {% if is_inspector %}
+    <a class="link" href="{{ url_for('inspector_project_detail', project_id=project.id) }}">Back to site</a>
+    {% else %}
+    <a class="link" href="{{ url_for('project_detail', project_id=project.id) }}">Back to site</a>
+    {% endif %}
+</p>
+{% endblock %}
